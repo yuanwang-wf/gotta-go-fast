@@ -58,7 +58,7 @@ draw s
     pure . center . padAll 1 . showCursor () (Location $ cursor s) $
     drawText s <=> str " "
 
-handleChar :: Char -> State -> EventM () (Next State)
+handleChar :: Char -> State -> EventM () State ()
 handleChar c s
   | not $ hasStarted s = do
     now <- liftIO getCurrentTime
@@ -66,7 +66,7 @@ handleChar c s
   | isComplete s' = do
     now <- liftIO getCurrentTime
     stopClock now s'
-  | otherwise = continue s'
+  | otherwise = s'
   where
     s' = applyChar c s
 
