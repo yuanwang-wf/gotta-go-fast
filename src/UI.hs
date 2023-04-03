@@ -108,7 +108,7 @@ app emptyAttr errorAttr resultAttr =
     { appDraw = draw
     , appChooseCursor = showFirstCursor
     , appHandleEvent = handleEvent
-    , appStartEvent = return
+    , appStartEvent = return ()
     , appAttrMap =
         const $
         attrMap
