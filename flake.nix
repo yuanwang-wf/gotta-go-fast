@@ -75,7 +75,7 @@
         devShells.default = pkgs.mkShell {
           inputsFrom = [ config.mission-control.devShell self'.devShells.main ];
         };
-        packages.default = config.packages.blogContent;
+        packages.default = config.packages.main-gotta-go-fast;
       };
     };
 }

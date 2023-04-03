@@ -3,9 +3,9 @@ module UI
   ) where
 
 import           Brick                  (App (..), AttrName, BrickEvent (..),
-                                         EventM, Location (..), Next,
+                                         EventM, Location (..),
                                          Padding (..), Widget, attrMap,
-                                         attrName, continue, defaultMain,
+                                         attrName,  defaultMain,
                                          emptyWidget, fg, halt, padAll,
                                          padBottom, showCursor, showFirstCursor,
                                          str, withAttr, (<+>), (<=>))
@@ -62,44 +62,45 @@ handleChar :: Char -> State -> EventM () (Next State)
 handleChar c s
   | not $ hasStarted s = do
     now <- liftIO getCurrentTime
-    continue $ startClock now s'
+    startClock now s'
   | isComplete s' = do
     now <- liftIO getCurrentTime
-    continue $ stopClock now s'
+    stopClock now s'
   | otherwise = continue s'
   where
     s' = applyChar c s
 
-handleEvent :: State -> BrickEvent () e -> EventM () (Next State)
+-- https://github.com/jtdaugherty/brick/blob/master/CHANGELOG.md#10
+handleEvent :: State -> BrickEvent () e -> EventM () State ()
 handleEvent s (VtyEvent (EvKey key [MCtrl])) =
   case key of
     KChar 'c' -> halt s
     KChar 'd' -> halt s
-    KChar 'w' -> continue $ applyBackspaceWord s
-    KBS       -> continue $ applyBackspaceWord s
-    _         -> continue s
+    KChar 'w' -> applyBackspaceWord s
+    KBS       -> applyBackspaceWord s
+    _         -> s
 handleEvent s (VtyEvent (EvKey key [MAlt])) =
   case key of
-    KBS -> continue $ applyBackspaceWord s
-    _   -> continue s
+    KBS -> applyBackspaceWord s
+    _   -> s
 handleEvent s (VtyEvent (EvKey key [MMeta])) =
   case key of
-    KBS -> continue $ applyBackspaceWord s
-    _   -> continue s
+    KBS -> applyBackspaceWord s
+    _   -> s
 handleEvent s (VtyEvent (EvKey key []))
   | hasEnded s =
     case key of
       KEnter -> halt s
       KEsc   -> halt $ s {loop = True}
-      _      -> continue s
+      _      -> s
   | otherwise =
     case key of
       KChar c -> handleChar c s
       KEnter  -> handleChar '\n' s
-      KBS     -> continue $ applyBackspace s
+      KBS     -> applyBackspace s
       KEsc    -> halt $ s {loop = True}
-      _       -> continue s
-handleEvent s _ = continue s
+      _       -> s
+handleEvent s _ = s
 
 app :: Attr -> Attr -> Attr -> App State e ()
 app emptyAttr errorAttr resultAttr =
