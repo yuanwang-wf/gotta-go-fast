@@ -71,8 +71,8 @@ handleChar c s
     s' = applyChar c s
 
 -- https://github.com/jtdaugherty/brick/blob/master/CHANGELOG.md#10
-handleEvent :: State -> BrickEvent () e -> EventM () State ()
-handleEvent s (VtyEvent (EvKey key [MCtrl])) =
+handleEvent :: BrickEvent () e -> EventM () State ()
+handleEvent (VtyEvent (EvKey key [MCtrl])) =
   case key of
     KChar 'c' -> halt s
     KChar 'd' -> halt s
