@@ -74,33 +74,33 @@ handleChar c s
 handleEvent :: BrickEvent () e -> EventM () State ()
 handleEvent (VtyEvent (EvKey key [MCtrl])) =
   case key of
-    KChar 'c' -> halt s
-    KChar 'd' -> halt s
+    KChar 'c' -> halt
+    KChar 'd' -> halt
     KChar 'w' -> applyBackspaceWord s
     KBS       -> applyBackspaceWord s
-    _         -> s
-handleEvent s (VtyEvent (EvKey key [MAlt])) =
+    _         -> continueWithoutRedraw
+handleEvent (VtyEvent (EvKey key [MAlt])) =
   case key of
     KBS -> applyBackspaceWord s
-    _   -> s
-handleEvent s (VtyEvent (EvKey key [MMeta])) =
+    _   -> continueWithoutRedraw
+handleEvent (VtyEvent (EvKey key [MMeta])) =
   case key of
     KBS -> applyBackspaceWord s
-    _   -> s
-handleEvent s (VtyEvent (EvKey key []))
+    _   -> continueWithoutRedraw
+handleEvent (VtyEvent (EvKey key []))
   | hasEnded s =
     case key of
-      KEnter -> halt s
+      KEnter -> halt
       KEsc   -> halt $ s {loop = True}
-      _      -> s
+      _      -> continueWithoutRedraw
   | otherwise =
     case key of
       KChar c -> handleChar c s
       KEnter  -> handleChar '\n' s
       KBS     -> applyBackspace s
       KEsc    -> halt $ s {loop = True}
-      _       -> s
-handleEvent s _ = s
+      _       -> continueWithoutRedraw
+handleEvent _ = continueWithoutRedraw
 
 app :: Attr -> Attr -> Attr -> App State e ()
 app emptyAttr errorAttr resultAttr =
