@@ -58,7 +58,7 @@
               hoogle serve -p 8888 --local
             '';
             category = "Dev Tools";
-          };
+         };
           fmt = {
             description = "Format the source tree";
             exec = config.treefmt.build.wrapper;
@@ -71,7 +71,6 @@
             '';
             category = "Dev Tools";
           };
-          preview = { exec = "warp -d ${config.packages.draftContent}"; };
         };
         devShells.default = pkgs.mkShell {
           inputsFrom = [ config.mission-control.devShell self'.devShells.main ];
