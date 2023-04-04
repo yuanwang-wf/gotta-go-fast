@@ -6,6 +6,7 @@ import           Brick                  (App (..), AttrName, BrickEvent (..),
                                          EventM, Location (..),
                                          Padding (..), Widget, attrMap,
                                          attrName,  defaultMain,
+                                         continueWithoutRedraw,
                                          emptyWidget, fg, halt, padAll,
                                          padBottom, showCursor, showFirstCursor,
                                          str, withAttr, (<+>), (<=>))
