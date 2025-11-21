@@ -3,9 +3,10 @@ module UI
   ) where
 
 import           Brick                  (App (..), AttrName, BrickEvent (..),
-                                         EventM, Location (..), Next,
+                                         EventM, Location (..),
                                          Padding (..), Widget, attrMap,
-                                         attrName, continue, defaultMain,
+                                         attrName,  defaultMain,
+                                         continueWithoutRedraw,
                                          emptyWidget, fg, halt, padAll,
                                          padBottom, showCursor, showFirstCursor,
                                          str, withAttr, (<+>), (<=>))
@@ -58,48 +59,49 @@ draw s
     pure . center . padAll 1 . showCursor () (Location $ cursor s) $
     drawText s <=> str " "
 
-handleChar :: Char -> State -> EventM () (Next State)
+handleChar :: Char -> State -> EventM () State ()
 handleChar c s
   | not $ hasStarted s = do
     now <- liftIO getCurrentTime
-    continue $ startClock now s'
+    startClock now s'
   | isComplete s' = do
     now <- liftIO getCurrentTime
-    continue $ stopClock now s'
-  | otherwise = continue s'
+    stopClock now s'
+  | otherwise = s'
   where
     s' = applyChar c s
 
-handleEvent :: State -> BrickEvent () e -> EventM () (Next State)
-handleEvent s (VtyEvent (EvKey key [MCtrl])) =
+-- https://github.com/jtdaugherty/brick/blob/master/CHANGELOG.md#10
+handleEvent :: BrickEvent () e -> EventM () State ()
+handleEvent (VtyEvent (EvKey key [MCtrl])) =
   case key of
-    KChar 'c' -> halt s
-    KChar 'd' -> halt s
-    KChar 'w' -> continue $ applyBackspaceWord s
-    KBS       -> continue $ applyBackspaceWord s
-    _         -> continue s
-handleEvent s (VtyEvent (EvKey key [MAlt])) =
+    KChar 'c' -> halt
+    KChar 'd' -> halt
+    KChar 'w' -> applyBackspaceWord s
+    KBS       -> applyBackspaceWord s
+    _         -> continueWithoutRedraw
+handleEvent (VtyEvent (EvKey key [MAlt])) =
   case key of
-    KBS -> continue $ applyBackspaceWord s
-    _   -> continue s
-handleEvent s (VtyEvent (EvKey key [MMeta])) =
+    KBS -> applyBackspaceWord s
+    _   -> continueWithoutRedraw
+handleEvent (VtyEvent (EvKey key [MMeta])) =
   case key of
-    KBS -> continue $ applyBackspaceWord s
-    _   -> continue s
-handleEvent s (VtyEvent (EvKey key []))
+    KBS -> applyBackspaceWord s
+    _   -> continueWithoutRedraw
+handleEvent (VtyEvent (EvKey key []))
   | hasEnded s =
     case key of
-      KEnter -> halt s
+      KEnter -> halt
       KEsc   -> halt $ s {loop = True}
-      _      -> continue s
+      _      -> continueWithoutRedraw
   | otherwise =
     case key of
       KChar c -> handleChar c s
       KEnter  -> handleChar '\n' s
-      KBS     -> continue $ applyBackspace s
+      KBS     -> applyBackspace s
       KEsc    -> halt $ s {loop = True}
-      _       -> continue s
-handleEvent s _ = continue s
+      _       -> continueWithoutRedraw
+handleEvent _ = continueWithoutRedraw
 
 app :: Attr -> Attr -> Attr -> App State e ()
 app emptyAttr errorAttr resultAttr =
@@ -107,7 +109,7 @@ app emptyAttr errorAttr resultAttr =
     { appDraw = draw
     , appChooseCursor = showFirstCursor
     , appHandleEvent = handleEvent
-    , appStartEvent = return
+    , appStartEvent = return ()
     , appAttrMap =
         const $
         attrMap
